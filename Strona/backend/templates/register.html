@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Rejestracja Pacjenta</title>
+    <link rel="stylesheet" href="../frontend/style.css">
+</head>
+<body>
+    <h1>Formularz Rejestracji Pacjenta</h1>
+    <form action="/register" method="POST">
+        <label>Imię:</label>
+        <input type="text" name="first_name" required><br>
+
+        <label>Nazwisko:</label>
+        <input type="text" name="last_name" required><br>
+
+        <label>PESEL:</label>
+        <input type="text" name="pesel" maxlength="11" required><br>
+
+        <label>Telefon:</label>
+        <input type="text" name="phone" required><br>
+
+        <label>Email:</label>
+        <input type="email" name="email" required><br>
+
+        <label>Data wizyty:</label>
+        <input type="date" name="visit_date" required><br>
+
+        <label for="visit_time">Godzina wizyty:</label>
+        <input type="time" id="visit_time" name="visit_time" required><br>
+
+        <a href="/" class="btn-back">Powrót do kalendarza</a>
+
+
+        <button type="submit">Zarejestruj</button>
+    </form>
+</body>
+</html>
