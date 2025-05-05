@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rejestracja wizyt</title>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        #calendar {
+            max-width: 900px;
+            margin: 40px auto;
+        }
+        .container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .btn-register {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kalendarz wizyt</h1>
+        <a href="/register" class="btn-register">Zarejestruj nową wizytę</a>
+        <div id="calendar"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pl.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'pl',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                events: '/appointments',
+                eventClick: function(info) {
+                    info.jsEvent.preventDefault();
+                    alert('Wizyta: ' + info.event.title + '\nData: ' + info.event.start.toLocaleString());
+                }
+            });
+            calendar.render();
+        });
+    </script>
+</body>
+</html>
