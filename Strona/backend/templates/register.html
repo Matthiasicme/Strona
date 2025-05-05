@@ -7,6 +7,16 @@
 </head>
 <body>
     <h1>Formularz Rejestracji Pacjenta</h1>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <form action="/register" method="POST">
         <label>Imię:</label>
         <input type="text" name="first_name" required><br>
@@ -24,15 +34,79 @@
         <input type="email" name="email" required><br>
 
         <label>Data wizyty:</label>
-        <input type="date" name="visit_date" required><br>
+        <input type="date" name="visit_date" id="visit_date" required><br>
+        <div id="dateError" class="error">Nie prowadzimy zapisów na weekendy (soboty i niedziele).</div>
 
         <label for="visit_time">Godzina wizyty:</label>
-        <input type="time" id="visit_time" name="visit_time" required><br>
+        <select id="visit_time" name="visit_time" required>
+            <option value="">Wybierz godzinę</option>
+            <!-- Opcje będą dodane przez JavaScript -->
+        </select><br>
 
         <a href="/" class="btn-back">Powrót do kalendarza</a>
 
 
         <button type="submit">Zarejestruj</button>
     </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Generowanie opcji godzin (8:00-20:00, tylko pełne i półpełne godziny)
+            const timeSelect = document.getElementById('visit_time');
+
+            for (let hour = 8; hour <= 20; hour++) {
+                // Dodaj pełną godzinę
+                const fullHour = document.createElement('option');
+                fullHour.value = `${hour.toString().padStart(2, '0')}:00`;
+                fullHour.textContent = `${hour.toString().padStart(2, '0')}:00`;
+                timeSelect.appendChild(fullHour);
+
+                // Dodaj półpełną godzinę (oprócz 20:30)
+                if (hour < 20) {
+                    const halfHour = document.createElement('option');
+                    halfHour.value = `${hour.toString().padStart(2, '0')}:30`;
+                    halfHour.textContent = `${hour.toString().padStart(2, '0')}:30`;
+                    timeSelect.appendChild(halfHour);
+                }
+            }
+
+            // Walidacja daty (blokowanie weekendów)
+            const dateInput = document.getElementById('visit_date');
+            const dateError = document.getElementById('dateError');
+            const today = new Date();
+
+            // Ustaw minimalną datę na dzisiaj
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            dateInput.min = `${yyyy}-${mm}-${dd}`;
+
+            dateInput.addEventListener('change', function() {
+                const selectedDate = new Date(this.value);
+                const dayOfWeek = selectedDate.getDay();
+
+                // 0 to niedziela, 6 to sobota
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    dateError.style.display = 'block';
+                    this.setCustomValidity('Nie prowadzimy zapisów na weekendy');
+                } else {
+                    dateError.style.display = 'none';
+                    this.setCustomValidity('');
+                }
+            });
+
+            // Walidacja formularza przed wysłaniem
+            document.getElementById('registrationForm').addEventListener('submit', function(event) {
+                const selectedDate = new Date(dateInput.value);
+                const dayOfWeek = selectedDate.getDay();
+
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    event.preventDefault();
+                    dateError.style.display = 'block';
+                }
+            });
+        });
+    </script>
+
 </body>
 </html>
