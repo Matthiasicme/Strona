@@ -2,111 +2,371 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rejestracja Pacjenta</title>
-    <link rel="stylesheet" href="../frontend/style.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #0056b3;
+        }
+
+        .header h1 {
+            color: #0056b3;
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .header-subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+            margin-right: 20px;
+            margin-bottom: 15px;
+        }
+
+        .form-group:last-child {
+            margin-right: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #444;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
+        }
+
+        input:focus, select:focus {
+            border-color: #0056b3;
+            box-shadow: 0 0 5px rgba(0, 86, 179, 0.3);
+            outline: none;
+        }
+
+        .section-title {
+            font-size: 18px;
+            color: #0056b3;
+            margin: 30px 0 15px 0;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .notes-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+            font-size: 16px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            min-width: 150px;
+            text-align: center;
+            margin: 5px 0;
+        }
+
+        .btn-primary {
+            background-color: #0056b3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #003d82;
+        }
+
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: #333;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background-color: #c7c7c7;
+        }
+
+        .required-field::after {
+            content: " *";
+            color: #e32;
+            font-weight: bold;
+        }
+
+        .required-note {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        .time-note {
+            font-size: 14px;
+            color: #0056b3;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .error-message {
+            color: #e32;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .form-group {
+                margin-right: 0;
+                min-width: 100%;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Formularz Rejestracji Pacjenta</h1>
+    <div class="container">
+        <div class="header">
+            <h1>FORMULARZ REJESTRACJI PACJENTA</h1>
+            <div class="header-subtitle">Prosimy o dokładne wypełnienie formularza</div>
+        </div>
 
-    <!-- Flash messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+        <form action="/register" method="POST" id="registrationForm">
+            <div class="section-title">Dane osobowe</div>
 
-    <form action="/register" method="POST">
-        <label>Imię:</label>
-        <input type="text" name="first_name" required><br>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required-field" for="first_name">Imię</label>
+                    <input type="text" id="first_name" name="first_name" required>
+                </div>
 
-        <label>Nazwisko:</label>
-        <input type="text" name="last_name" required><br>
+                <div class="form-group">
+                    <label class="required-field" for="last_name">Nazwisko</label>
+                    <input type="text" id="last_name" name="last_name" required>
+                </div>
+            </div>
 
-        <label>PESEL:</label>
-        <input type="text" name="pesel" maxlength="11" required><br>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required-field" for="pesel">PESEL</label>
+                    <input type="text" id="pesel" name="pesel" maxlength="11" required>
+                </div>
 
-        <label>Telefon:</label>
-        <input type="text" name="phone" required><br>
+                <div class="form-group">
+                    <label class="required-field" for="dob">Data urodzenia</label>
+                    <input type="date" id="dob" name="dob" required>
+                </div>
+            </div>
 
-        <label>Email:</label>
-        <input type="email" name="email" required><br>
+            <div class="section-title">Dane kontaktowe</div>
 
-        <label>Data wizyty:</label>
-        <input type="date" name="visit_date" id="visit_date" required><br>
-        <div id="dateError" class="error">Nie prowadzimy zapisów na weekendy (soboty i niedziele).</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required-field" for="phone">Telefon</label>
+                    <input type="tel" id="phone" name="phone" required>
+                </div>
 
-        <label for="visit_time">Godzina wizyty:</label>
-        <select id="visit_time" name="visit_time" required>
-            <option value="">Wybierz godzinę</option>
-            <!-- Opcje będą dodane przez JavaScript -->
-        </select><br>
+                <div class="form-group">
+                    <label class="required-field" for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+            </div>
 
-        <a href="/" class="btn-back">Powrót do kalendarza</a>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="address">Adres</label>
+                    <input type="text" id="address" name="address">
+                </div>
+            </div>
 
+            <div class="section-title">Szczegóły wizyty</div>
 
-        <button type="submit">Zarejestruj</button>
-    </form>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="required-field" for="visit_date">Data wizyty</label>
+                    <input type="date" id="visit_date" name="visit_date" required>
+                    <div class="time-note">Wizyty są dostępne tylko w dni powszednie (poniedziałek-piątek)</div>
+                    <div id="date-error" class="error-message">Wybrano weekend. Wizyty są dostępne tylko w dni powszednie.</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="required-field" for="visit_time">Godzina wizyty</label>
+                    <select id="visit_time" name="visit_time" required>
+                        <option value="">Wybierz godzinę</option>
+                    </select>
+                    <div class="time-note">Godziny wizyt: 8:00-20:00 (co 30 minut)</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="visit_type">Rodzaj wizyty</label>
+                    <select id="visit_type" name="visit_type">
+                        <option value="">Wybierz rodzaj wizyty</option>
+                        <option value="first_visit">Pierwsza wizyta</option>
+                        <option value="follow_up">Wizyta kontrolna</option>
+                        <option value="consultation">Konsultacja</option>
+                        <option value="examination">Badanie</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="doctor">Preferowany lekarz</label>
+                    <select id="doctor" name="doctor">
+                        <option value="">Wybierz lekarza</option>
+                        <option value="dr_kowalski">dr Jan Kowalski</option>
+                        <option value="dr_nowak">dr Anna Nowak</option>
+                        <option value="dr_wisniewski">dr Tomasz Wiśniewski</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="notes">Uwagi / Cel wizyty</label>
+                    <textarea class="notes-field" id="notes" name="notes"></textarea>
+                </div>
+            </div>
+
+            <div class="required-note">Pola oznaczone * są wymagane</div>
+
+            <div class="buttons">
+                <a href="/" class="btn btn-secondary">Powrót do kalendarza</a>
+                <button type="submit" class="btn btn-primary">Zarejestruj wizytę</button>
+            </div>
+        </form>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Generowanie opcji godzin (8:00-20:00, tylko pełne i półpełne godziny)
-            const timeSelect = document.getElementById('visit_time');
+            // Ustaw dzisiejszą datę jako minimalną datę wizyty
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const formattedTomorrow = tomorrow.toISOString().split('T')[0];
+            document.getElementById('visit_date').min = formattedTomorrow;
 
-            for (let hour = 8; hour <= 20; hour++) {
-                // Dodaj pełną godzinę
-                const fullHour = document.createElement('option');
-                fullHour.value = `${hour.toString().padStart(2, '0')}:00`;
-                fullHour.textContent = `${hour.toString().padStart(2, '0')}:00`;
-                timeSelect.appendChild(fullHour);
+            // Funkcja do sprawdzania, czy data jest weekendem
+            function isWeekend(date) {
+                const day = date.getDay();
+                return day === 0 || day === 6; // 0 = niedziela, 6 = sobota
+            }
 
-                // Dodaj półpełną godzinę (oprócz 20:30)
-                if (hour < 20) {
-                    const halfHour = document.createElement('option');
-                    halfHour.value = `${hour.toString().padStart(2, '0')}:30`;
-                    halfHour.textContent = `${hour.toString().padStart(2, '0')}:30`;
-                    timeSelect.appendChild(halfHour);
+            // Funkcja do generowania dostępnych godzin wizyt (8:00-20:00, co 30 minut)
+            function populateTimeOptions() {
+                const timeSelect = document.getElementById('visit_time');
+                timeSelect.innerHTML = '<option value="">Wybierz godzinę</option>';
+
+                for (let hour = 8; hour <= 19; hour++) {
+                    // Dodaj pełną godzinę (np. 8:00)
+                    const fullHour = `${hour.toString().padStart(2, '0')}:00`;
+                    const fullHourOption = document.createElement('option');
+                    fullHourOption.value = fullHour;
+                    fullHourOption.textContent = fullHour;
+                    timeSelect.appendChild(fullHourOption);
+
+                    // Dodaj półgodzinę (np. 8:30), ale tylko jeśli nie jest to ostatnia godzina (20:00)
+                    if (hour < 20) {
+                        const halfHour = `${hour.toString().padStart(2, '0')}:30`;
+                        const halfHourOption = document.createElement('option');
+                        halfHourOption.value = halfHour;
+                        halfHourOption.textContent = halfHour;
+                        timeSelect.appendChild(halfHourOption);
+                    }
                 }
             }
 
-            // Walidacja daty (blokowanie weekendów)
-            const dateInput = document.getElementById('visit_date');
-            const dateError = document.getElementById('dateError');
-            const today = new Date();
+            // Wypełnij select godzinami
+            populateTimeOptions();
 
-            // Ustaw minimalną datę na dzisiaj
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            dateInput.min = `${yyyy}-${mm}-${dd}`;
-
-            dateInput.addEventListener('change', function() {
+            // Walidacja daty przy wyborze (zakaz weekendów)
+            document.getElementById('visit_date').addEventListener('change', function(e) {
                 const selectedDate = new Date(this.value);
-                const dayOfWeek = selectedDate.getDay();
+                const dateError = document.getElementById('date-error');
 
-                // 0 to niedziela, 6 to sobota
-                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                if (isWeekend(selectedDate)) {
                     dateError.style.display = 'block';
-                    this.setCustomValidity('Nie prowadzimy zapisów na weekendy');
+                    this.value = ''; // Wyczyść wybór
                 } else {
                     dateError.style.display = 'none';
-                    this.setCustomValidity('');
                 }
             });
 
             // Walidacja formularza przed wysłaniem
-            document.getElementById('registrationForm').addEventListener('submit', function(event) {
-                const selectedDate = new Date(dateInput.value);
-                const dayOfWeek = selectedDate.getDay();
+            document.getElementById('registrationForm').addEventListener('submit', function(e) {
+                const visitDate = document.getElementById('visit_date').value;
 
-                if (dayOfWeek === 0 || dayOfWeek === 6) {
-                    event.preventDefault();
-                    dateError.style.display = 'block';
+                if (visitDate) {
+                    const selectedDate = new Date(visitDate);
+
+                    if (isWeekend(selectedDate)) {
+                        e.preventDefault();
+                        document.getElementById('date-error').style.display = 'block';
+                        document.getElementById('visit_date').focus();
+                    }
                 }
             });
         });
     </script>
-
 </body>
 </html>
