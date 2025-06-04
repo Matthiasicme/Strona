@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+
+{% block title %}Umów wizytę - ePrzychodnia{% endblock %}
+
+{% block extra_css %}
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+<style>
+    .calendar-container {
+        margin: 2rem 0;
+    }
+    #calendar {
+        background: white;
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .fc-day-today {
+        background-color: rgba(67, 97, 238, 0.1) !important;
+    }
+    .fc-day-selected {
+        background-color: rgba(67, 97, 238, 0.2) !important;
+    }
+    .time-slots {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+    .time-slot {
+        padding: 0.75rem;
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: var(--border-radius);
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .time-slot:hover {
+        background: #f5f5f5;
+    }
+    .time-slot.selected {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+    .time-slot.unavailable {
+        opacity: 0.5;
+        cursor: not-allowed;
+        text-decoration: line-through;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Umów wizytę</h1>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Dostępne terminy</h5>
+                    <p class="text-muted" id="selected-date">Wybierz datę z kalendarza</p>
+                    
+                    <div id="doctor-selection" class="mb-3">
+                        <label for="lekarz" class="form-label">Lekarz</label>
+                        <select class="form-select" id="lekarz">
+                            <!-- Wypełniane dynamicznie -->
+                        </select>
+                    </div>
+                    
+                    <div id="service-selection" class="mb-3">
+                        <label for="usluga" class="form-label">Usługa</label>
+                        <select class="form-select" id="usluga">
+                            <!-- Wypełniane dynamicznie -->
+                        </select>
+                    </div>
+                    
+                    <div id="time-slots" class="time-slots">
+                        <!-- Wypełniane dynamicznie -->
+                    </div>
+                    
+                    <button id="book-appointment" class="btn btn-primary w-100 mt-3" disabled>
+                        Zarezerwuj wizytę
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal potwierdzenia -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Potwierdź rezerwację</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Czy na pewno chcesz zarezerwować wizytę na:</p>
+                <p><strong>Data:</strong> <span id="modal-date"></span></p>
+                <p><strong>Godzina:</strong> <span id="modal-time"></span></p>
+                <p><strong>Lekarz:</strong> <span id="modal-doctor"></span></p>
+                <p><strong>Usługa:</strong> <span id="modal-service"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn btn-primary" id="confirm-booking">Potwierdź</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/pl.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let selectedDate = null;
+    let selectedTime = null;
+    let selectedDoctor = null;
+    let selectedService = null;
+    
+    // Inicjalizacja kalendarza
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'pl',
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        firstDay: 1, // Poniedziałek jako pierwszy dzień tygodnia
+        selectable: true,
+        select: function(info) {
+            selectedDate = info.startStr.split('T')[0];
+            document.getElementById('selected-date').textContent = new Date(selectedDate).toLocaleDateString('pl-PL', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Pobierz dostępne godziny dla wybranej daty i lekarza
+            loadAvailableTimes();
+            
+            // Zaznacz wybrany dzień
+            document.querySelectorAll('.fc-day').forEach(day => day.classList.remove('fc-day-selected'));
+            info.dayEl.classList.add('fc-day-selected');
+        },
+        dateClick: function(info) {
+            calendar.changeView('timeGridDay', info.date);
+        },
+        eventClick: function(info) {
+            // Obsługa kliknięcia w wydarzenie
+            console.log('Wydarzenie kliknięte:', info.event);
+        },
+        events: {
+            url: '/api/wizyty',
+            method: 'GET',
+            failure: function() {
+                alert('Błąd podczas ładowania wizyt');
+            }
+        },
+        eventTimeFormat: { 
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        },
+        height: 'auto',
+        aspectRatio: 1.5
+    });
+    
+    calendar.render();
+    
+    // Pobierz listę lekarzy i usług
+    Promise.all([
+        fetch('/api/lekarze').then(res => res.json()),
+        fetch('/api/uslugi').then(res => res.json())
+    ]).then(([lekarze, uslugi]) => {
+        const lekarzSelect = document.getElementById('lekarz');
+        const uslugaSelect = document.getElementById('usluga');
+        
+        // Wypełnij listę lekarzy
+        lekarze.forEach(lekarz => {
+            const option = document.createElement('option');
+            option.value = lekarz.id;
+            option.textContent = `${lekarz.tytul} ${lekarz.imie} ${lekarz.nazwisko}`;
+            lekarzSelect.appendChild(option);
+        });
+        
+        // Wypełnij listę usług
+        uslugi.forEach(usluga => {
+            const option = document.createElement('option');
+            option.value = usluga.id;
+            option.textContent = `${usluga.nazwa} (${usluga.cena} PLN)`;
+            option.setAttribute('data-czas', usluga.czas_trwania);
+            uslugaSelect.appendChild(option);
+        });
+        
+        // Obsługa zmiany lekarza
+        lekarzSelect.addEventListener('change', function() {
+            selectedDoctor = this.value;
+            if (selectedDate) {
+                loadAvailableTimes();
+            }
+        });
+        
+        // Obsługa zmiany usługi
+        uslugaSelect.addEventListener('change', function() {
+            selectedService = this.value;
+            updateBookButtonState();
+        });
+    });
+    
+    // Funkcja ładująca dostępne godziny
+    function loadAvailableTimes() {
+        if (!selectedDate || !document.getElementById('lekarz').value) return;
+        
+        const lekarzId = document.getElementById('lekarz').value;
+        
+        fetch(`/termin/dostepne?data=${selectedDate}&lekarz_id=${lekarzId}`)
+            .then(response => response.json())
+            .then(data => {
+                const timeSlotsContainer = document.getElementById('time-slots');
+                timeSlotsContainer.innerHTML = '';
+                
+                if (data.dostepne_godziny && data.dostepne_godziny.length > 0) {
+                    data.dostepne_godziny.forEach(time => {
+                        const timeSlot = document.createElement('div');
+                        timeSlot.className = 'time-slot';
+                        timeSlot.textContent = time;
+                        timeSlot.dataset.time = time;
+                        
+                        timeSlot.addEventListener('click', function() {
+                            document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
+                            this.classList.add('selected');
+                            selectedTime = this.dataset.time;
+                            updateBookButtonState();
+                            
+                            // Ustaw dane w modalu
+                            document.getElementById('modal-date').textContent = 
+                                new Date(selectedDate).toLocaleDateString('pl-PL');
+                            document.getElementById('modal-time').textContent = selectedTime;
+                            document.getElementById('modal-doctor').textContent = 
+                                document.getElementById('lekarz').options[document.getElementById('lekarz').selectedIndex].text;
+                            document.getElementById('modal-service').textContent = 
+                                document.getElementById('usluga').options[document.getElementById('usluga').selectedIndex].text;
+                        });
+                        
+                        timeSlotsContainer.appendChild(timeSlot);
+                    });
+                } else {
+                    timeSlotsContainer.innerHTML = '<p class="text-muted">Brak dostępnych terminów w wybranym dniu.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Błąd podczas pobierania dostępnych terminów:', error);
+            });
+    }
+    
+    // Aktualizacja stanu przycisku rezerwacji
+    function updateBookButtonState() {
+        const bookButton = document.getElementById('book-appointment');
+        bookButton.disabled = !(selectedDate && selectedTime && document.getElementById('usluga').value);
+    }
+    
+    // Obsługa przycisku rezerwacji
+    document.getElementById('book-appointment').addEventListener('click', function() {
+        if (selectedDate && selectedTime && selectedDoctor && selectedService) {
+            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            modal.show();
+        }
+    });
+    
+    // Potwierdzenie rezerwacji
+    document.getElementById('confirm-booking').addEventListener('click', function() {
+        const formData = new FormData();
+        formData.append('data', selectedDate);
+        formData.append('godzina', selectedTime);
+        formData.append('lekarz_id', document.getElementById('lekarz').value);
+        formData.append('usluga_id', document.getElementById('usluga').value);
+        
+        fetch('/termin/zapisz', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Wizyta została zarezerwowana pomyślnie!');
+                location.reload();
+            } else {
+                throw new Error(data.message || 'Wystąpił błąd podczas rezerwacji');
+            }
+        })
+        .catch(error => {
+            console.error('Błąd:', error);
+            alert('Wystąpił błąd: ' + error.message);
+        })
+        .finally(() => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+            modal.hide();
+        });
+    });
+});
+</script>
+{% endblock %}

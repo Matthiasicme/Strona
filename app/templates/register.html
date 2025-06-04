@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+
+{% block title %}ePrzychodnia - Rejestracja{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+    .registration-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .registration-header {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .registration-header h1 {
+        margin: 0;
+        color: white;
+        font-size: 2rem;
+    }
+    
+    .registration-header p {
+        opacity: 0.9;
+        margin: 0.5rem 0 0;
+    }
+    
+    .registration-steps {
+        display: flex;
+        justify-content: space-between;
+        padding: 1.5rem 2rem;
+        background: #f8f9fa;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .step {
+        display: flex;
+        align-items: center;
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    .step.active {
+        color: #3a0ca3;
+        font-weight: 600;
+    }
+    
+    .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #e9ecef;
+        margin-right: 0.5rem;
+        color: #212529;
+        font-size: 0.9rem;
+    }
+    
+    .step.active .step-number {
+        background: #3a0ca3;
+        color: white;
+    }
+    
+    .step-connector {
+        flex: 1;
+        height: 2px;
+        background: #e9ecef;
+        margin: 0 1rem;
+        position: relative;
+        top: -1px;
+    }
+    
+    .registration-form {
+        padding: 2rem;
+    }
+    
+    .form-section {
+        margin-bottom: 2.5rem;
+    }
+    
+    .form-section h3 {
+        color: #3a0ca3;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .form-row {
+        display: flex;
+        flex-wrap: wrap;
+        margin: 0 -1rem 1.5rem;
+    }
+    
+    .form-group {
+        flex: 1 0 calc(50% - 2rem);
+        margin: 0 1rem 1.5rem;
+        min-width: 250px;
+    }
+    
+    .form-group.full-width {
+        flex: 1 0 calc(100% - 2rem);
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #212529;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    
+    .form-control:focus {
+        border-color: #3a0ca3;
+        box-shadow: 0 0 0 0.2rem rgba(58, 12, 163, 0.25);
+        outline: none;
+    }
+    
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #eee;
+    }
+    
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .btn-back {
+        background: #f8f9fa;
+        color: #212529;
+        border: 1px solid #dee2e6;
+    }
+    
+    .btn-back:hover {
+        background: #e9ecef;
+    }
+    
+    .btn-primary {
+        background: #3a0ca3;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #2a0a7a;
+    }
+    
+    .btn-next {
+        min-width: 150px;
+        text-align: center;
+    }
+    
+    .form-text {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    
+    .required-field::after {
+        content: ' *';
+        color: #dc3545;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .form-group {
+            flex: 1 0 100%;
+            margin: 0 0 1.5rem;
+        }
+        
+        .step-text {
+            display: none;
+        }
+        
+        .step-connector {
+            margin: 0 0.5rem;
+        }
+    }
+</style>
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="registration-container">
+    <div class="registration-header">
+        <h1>FORMULARZ REJESTRACJI</h1>
+        <p>Prosimy o wypełnienie poniższego formularza</p>
+    </div>
+    
+    <div class="registration-steps">
+        <div class="step active">
+            <span class="step-number">1</span>
+            <span class="step-text">Dane osobowe</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step">
+            <span class="step-number">2</span>
+            <span class="step-text">Dane logowania</span>
+        </div>
+    </div>
+        
+    <div class="registration-form">
+        <form id="registrationForm" method="POST" action="{{ url_for('register') }}" onsubmit="return handleSubmit(event)">
+            <div class="form-section">
+                <h3>Dane osobowe</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="required-field" for="first_name">Imię</label>
+                        <input type="text" id="first_name" name="first_name" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required-field" for="last_name">Nazwisko</label>
+                        <input type="text" id="last_name" name="last_name" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Dane kontaktowe</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="required-field" for="phone">Telefon</label>
+                        <input type="tel" id="phone" name="phone" class="form-control" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required-field" for="email">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="address">Adres</label>
+                        <input type="text" id="address" name="address" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Dane logowania</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="required-field" for="password">Hasło</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                        <small class="form-text">Hasło musi zawierać co najmniej 8 znaków, w tym wielką literę, cyfrę i znak specjalny</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required-field" for="confirm_password">Potwierdź hasło</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('login') }}" class="btn btn-back">Powrót do logowania</a>
+                <button type="submit" class="btn btn-primary btn-next">Zarejestruj się</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+        // Handle form submission
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            // Basic form validation
+            const form = document.getElementById('registrationForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Validate required fields
+            const requiredFields = ['first_name', 'last_name', 'email', 'password', 'phone'];
+            const missingFields = requiredFields.filter(field => !data[field]);
+            
+            if (missingFields.length > 0) {
+                alert(`Proszę wypełnić wymagane pola: ${missingFields.join(', ')}`);
+                return false;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(data.email)) {
+                alert('Proszę podać poprawny adres email');
+                return false;
+            }
+            
+            // Validate password strength
+            if (data.password.length < 8) {
+                alert('Hasło musi zawierać co najmniej 8 znaków');
+                return false;
+            }
+            
+            try {
+                const response = await fetch('/api/auth/register/pacjent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        imie: data.first_name,
+                        nazwisko: data.last_name,
+                        email: data.email,
+                        haslo: data.password,
+                        telefon: data.phone,
+                        data_urodzenia: data.birth_date || null,
+                        adres: data.address || null,
+                        kod_pocztowy: data.postal_code || null,
+                        miasto: data.city || null,
+                        kraj: data.country || null,
+                        pesel: data.pesel || null
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Redirect to success page or show success message
+                    window.location.href = '/success?type=registration';
+                } else {
+                    throw new Error(result.message || 'Wystąpił błąd podczas rejestracji');
+                }
+            } catch (error) {
+                console.error('Błąd rejestracji:', error);
+                alert(error.message || 'Wystąpił błąd podczas rejestracji. Spróbuj ponownie.');
+            }
+            
+            return false;
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ustaw dzisiejszą datę jako minimalną datę wizyty
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const formattedTomorrow = tomorrow.toISOString().split('T')[0];
+            document.getElementById('visit_date').min = formattedTomorrow;
+
+            // Funkcja do sprawdzania, czy data jest weekendem
+            function isWeekend(date) {
+                const day = date.getDay();
+                return day === 0 || day === 6; // 0 = niedziela, 6 = sobota
+            }
+
+            // Funkcja do generowania dostępnych godzin wizyt (8:00-20:00, co 30 minut)
+            function populateTimeOptions() {
+                const timeSelect = document.getElementById('visit_time');
+                timeSelect.innerHTML = '<option value="">Wybierz godzinę</option>';
+
+                for (let hour = 8; hour <= 19; hour++) {
+                    // Dodaj pełną godzinę (np. 8:00)
+                    const fullHour = `${hour.toString().padStart(2, '0')}:00`;
+                    const fullHourOption = document.createElement('option');
+                    fullHourOption.value = fullHour;
+                    fullHourOption.textContent = fullHour;
+                    timeSelect.appendChild(fullHourOption);
+
+                    // Dodaj półgodzinę (np. 8:30), ale tylko jeśli nie jest to ostatnia godzina (20:00)
+                    if (hour < 20) {
+                        const halfHour = `${hour.toString().padStart(2, '0')}:30`;
+                        const halfHourOption = document.createElement('option');
+                        halfHourOption.value = halfHour;
+                        halfHourOption.textContent = halfHour;
+                        timeSelect.appendChild(halfHourOption);
+                    }
+                }
+            }
+
+            // Wypełnij select godzinami
+            populateTimeOptions();
+
+            // Walidacja daty przy wyborze (zakaz weekendów)
+            document.getElementById('visit_date').addEventListener('change', function(e) {
+                const selectedDate = new Date(this.value);
+                const dateError = document.getElementById('date-error');
+
+                if (isWeekend(selectedDate)) {
+                    dateError.style.display = 'block';
+                    this.value = ''; // Wyczyść wybór
+                } else {
+                    dateError.style.display = 'none';
+                }
+            });
+
+            // Walidacja formularza przed wysłaniem
+            document.getElementById('registrationForm').addEventListener('submit', function(e) {
+                const visitDate = document.getElementById('visit_date').value;
+
+                if (visitDate) {
+                    const selectedDate = new Date(visitDate);
+
+                    if (isWeekend(selectedDate)) {
+                        e.preventDefault();
+                        document.getElementById('date-error').style.display = 'block';
+                        document.getElementById('visit_date').focus();
+                    }
+                }
+            });
+        });
+    </script>
+{% endblock %}

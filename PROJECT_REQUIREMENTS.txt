@@ -1,0 +1,40 @@
+Here’s the translated and rewritten version of your text in a table-like format:  
+
+---
+
+### **Functional Requirements:**  
+
+| Requirement | Description |
+|-------------|-------------|
+| Patient Registration | The user should be able to create an account and edit their data. |
+| Appointment Scheduling | The patient selects a date, time, and doctor. |
+| Appointment Management | Patients and doctors can cancel or modify appointments. |
+| Notifications | Automatic appointment reminders (SMS, email). |
+| Patient History | Access to an archive of past visits and treatments. |
+| Admin Panel | Managing doctors, schedules, and statistics. |
+| Payment System Integration | Online payment option for appointments. |
+
+### **Non-Functional Requirements:**  
+
+| Requirement | Description |
+|-------------|-------------|
+| Data Security | Data encryption and GDPR compliance. |
+| Responsive Interface | Accessibility on computers and mobile devices. |
+| Performance | Fast system operation, support for multiple users. |
+| User-Friendliness | Intuitive user interface. |
+| Modularity | Possibility for future system expansion. |
+
+### **Use Case Table:**  
+
+| **ID** | **Name** | **Description** | **Actors** |
+|--------|----------|----------------|------------|
+| UC1 | Patient Registration | Patient creates an account by providing personal data. | Patient |
+| UC2 | Login | Patient/logged-in user enters access credentials. | Patient, Doctor, Admin |
+| UC3 | Scheduling an Appointment | Patient selects a date and doctor. | Patient |
+| UC4 | Canceling an Appointment | Patient or doctor can cancel an appointment. | Patient, Doctor |
+| UC5 | Appointment Notifications | System sends reminders about upcoming appointments. | System |
+| UC6 | Viewing Patient History | Doctor has access to the patient’s previous visits. | Doctor, Patient |
+| UC7 | Managing Doctors | Administrator adds/removes doctors and edits schedules. | Administrator |
+---
+
+This format makes the information more structured and easier to read. Let me know if you'd like any modifications!

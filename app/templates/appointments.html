@@ -1,0 +1,657 @@
+{% extends 'base.html' %}
+
+{% block title %}ePrzychodnia - Harmonogram wizyt{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+    .appointment-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .page-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .page-header p {
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+    
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        color: #4361ee;
+        text-decoration: none;
+        margin-bottom: 1.5rem;
+        transition: color 0.2s ease;
+    }
+    
+    .back-button:hover {
+        color: #3a0ca3;
+        text-decoration: none;
+    }
+    
+    .back-button i {
+        margin-right: 0.5rem;
+    }
+    
+    .fc {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        padding: 1.5rem;
+    }
+    
+    .fc .fc-toolbar-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .fc .fc-button {
+        background-color: #4361ee;
+        border: none;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        text-transform: capitalize;
+        transition: all 0.2s ease;
+    }
+    
+    .fc .fc-button:hover {
+        background-color: #3a0ca3;
+    }
+    
+    .fc .fc-button-primary:not(:disabled).fc-button-active, 
+    .fc .fc-button-primary:not(:disabled):active {
+        background-color: #3a0ca3;
+    }
+    
+    .fc-event {
+        border: none;
+        border-radius: 4px;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .fc-event:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+    
+    .fc-daygrid-day-number {
+        color: #2c3e50;
+        font-weight: 500;
+    }
+    
+    .fc-col-header-cell-cushion {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .fc-day-today {
+        background-color: rgba(67, 97, 238, 0.1) !important;
+    }
+    
+    .appointment-details {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1050;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .appointment-details.show {
+        display: flex;
+    }
+    
+    .appointment-details-content {
+        background: white;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 500px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+    
+    .close-details {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6c757d;
+        transition: color 0.2s ease;
+    }
+    
+    .close-details:hover {
+        color: #2c3e50;
+    }
+    
+    .appointment-details h3 {
+        margin-top: 0;
+        color: #2c3e50;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .detail-row {
+        display: flex;
+        margin-bottom: 1rem;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+        width: 120px;
+    }
+    
+    .detail-value {
+        flex: 1;
+        color: #2c3e50;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+    }
+    
+    .status-planned {
+        background-color: #e9ecef;
+        color: #212529;
+    }
+    
+    .status-confirmed {
+        background-color: #c3e6cb;
+        color: #155724;
+    }
+    
+    .status-canceled {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    
+    .status-completed {
+        background-color: #cce5ff;
+        color: #004085;
+    }
+    
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1050;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow-y: auto;
+        padding: 20px 0;
+    }
+    
+    .modal.show {
+        display: block;
+    }
+    
+    .modal-content {
+        background-color: #fff;
+        margin: 10% auto;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 90%;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+    
+    .close-modal {
+        position: absolute;
+        right: 1.5rem;
+        top: 1rem;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #6c757d;
+    }
+    
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+        background-color: #4361ee;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #3a0ca3;
+    }
+    
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+    
+    /* Make sure the modal appears above other content */
+    .modal {
+        z-index: 1050;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="appointment-container">
+    <div class="page-header">
+        <a href="{{ url_for('index') }}" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+            <span>Powrót do strony głównej</span>
+        </a>
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1>Harmonogram wizyt</h1>
+                <p>Przeglądaj i zarządzaj zaplanowanymi wizytami</p>
+            </div>
+            <button id="newAppointmentBtn" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nowa wizyta
+            </button>
+        </div>
+    </div>
+    
+    <div id="calendar"></div>
+
+    <!-- New Appointment Modal -->
+    <div id="newAppointmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Nowa wizyta</h3>
+            <form id="newAppointmentForm">
+                <div class="form-group">
+                    <label for="pacjentSelect">Pacjent</label>
+                    <select id="pacjentSelect" class="form-control" required>
+                        <option value="">Wybierz pacjenta</option>
+                        <!-- Will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="lekarzSelect">Lekarz</label>
+                    <select id="lekarzSelect" class="form-control" required>
+                        <option value="">Wybierz lekarza</option>
+                        <!-- Will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="appointmentDate">Data</label>
+                    <input type="date" id="appointmentDate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="appointmentTime">Godzina</label>
+                    <input type="time" id="appointmentTime" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="uslugiSelect">Usługi</label>
+                    <select id="uslugiSelect" class="form-control" multiple>
+                        <!-- Will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelAppointment">Anuluj</button>
+                    <button type="submit" class="btn btn-primary">Zapisz wizytę</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="appointmentDetails" class="appointment-details">
+        <div class="appointment-details-content">
+            <button class="close-details">&times;</button>
+            <h3>Szczegóły wizyty</h3>
+            <div class="detail-row">
+                <div class="detail-label">Pacjent:</div>
+                <div id="detailPacjent" class="detail-value"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Lekarz:</div>
+                <div id="detailLekarz" class="detail-value"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Data i godzina:</div>
+                <div id="detailData" class="detail-value"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Status:</div>
+                <div id="detailStatus" class="detail-value"></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">Usługi:</div>
+                <div id="detailUslugi" class="detail-value"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script>
+    // Check if FullCalendar is loaded
+    if (typeof FullCalendar === 'undefined') {
+        console.error('FullCalendar library failed to load!');
+        document.addEventListener('DOMContentLoaded', function() {
+            alert('Błąd: Biblioteka FullCalendar nie została poprawnie załadowana. Proszę odświeżyć stronę.');
+        });
+    } else {
+        console.log('FullCalendar loaded successfully, version:', FullCalendar.version);
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    console.log('Initializing calendar...');
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM fully loaded, initializing FullCalendar...');
+        const calendarEl = document.getElementById('calendar');
+        const appointmentDetails = document.getElementById('appointmentDetails');
+        const closeDetailsBtn = document.querySelector('.close-details');
+        
+        // Initialize FullCalendar
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            buttonText: {
+                today: 'Dzisiaj',
+                month: 'Miesiąc',
+                week: 'Tydzień',
+                day: 'Dzień'
+            },
+            locale: 'pl',
+            firstDay: 1, // Start week on Monday
+            height: 'auto',
+            nowIndicator: true,
+            navLinks: true,
+            dayMaxEvents: true,
+            events: '/api/wizyty/terminy',
+            eventClick: function(info) {
+                const event = info.event;
+                document.getElementById('detailPacjent').textContent = event.extendedProps.pacjent;
+                document.getElementById('detailLekarz').textContent = event.extendedProps.lekarz;
+                document.getElementById('detailData').textContent = 
+                    `${event.start.toLocaleString('pl-PL', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })} - ${event.end.toLocaleString('pl-PL', { 
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}`;
+                
+                // Set status with appropriate styling
+                const statusMap = {
+                    'zaplanowana': 'Zaplanowana',
+                    'potwierdzona': 'Potwierdzona',
+                    'anulowana': 'Anulowana',
+                    'zakończona': 'Zakończona'
+                };
+                
+                const status = event.extendedProps.status || 'zaplanowana';
+                const statusText = statusMap[status] || status;
+                const statusClass = `status-${status.toLowerCase().replace('ą', 'a')}`;
+                
+                document.getElementById('detailStatus').innerHTML = 
+                    `<span class="status-badge ${statusClass}">${statusText}</span>`;
+                
+                // Set services
+                const services = event.extendedProps.uslugi || [];
+                document.getElementById('detailUslugi').textContent = 
+                    services.length > 0 ? services.join(', ') : 'Brak usług';
+                
+                // Show details modal
+                appointmentDetails.classList.add('show');
+                
+                // Prevent default click behavior
+                info.jsEvent.preventDefault();
+            }
+        });
+        
+        // Initialize the calendar
+        calendar.render();
+        
+        // Close details modal when clicking the close button
+        closeDetailsBtn.addEventListener('click', function() {
+            appointmentDetails.classList.remove('show');
+        });
+        
+        // Close details modal when clicking outside the content
+        appointmentDetails.addEventListener('click', function(e) {
+            if (e.target === appointmentDetails) {
+                appointmentDetails.classList.remove('show');
+            }
+        });
+        
+        // New Appointment Modal
+        const newAppointmentBtn = document.getElementById('newAppointmentBtn');
+        const newAppointmentModal = document.getElementById('newAppointmentModal');
+        const closeModalBtn = document.querySelector('.close-modal');
+        const cancelBtn = document.getElementById('cancelAppointment');
+        const newAppointmentForm = document.getElementById('newAppointmentForm');
+        
+        // Ensure modal is hidden by default
+        newAppointmentModal.style.display = 'none';
+        
+        // Set minimum date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('appointmentDate').min = today;
+        
+        // Load doctors, patients, and services
+        Promise.all([
+            fetch('/api/lekarze').then(res => res.json()),
+            fetch('/api/pacjenci').then(res => res.json()),
+            fetch('/api/uslugi').then(res => res.json())
+        ]).then(([doctors, patients, services]) => {
+            // Populate doctors dropdown
+            const lekarzSelect = document.getElementById('lekarzSelect');
+            doctors.forEach(doctor => {
+                const option = document.createElement('option');
+                option.value = doctor.id;
+                option.textContent = `${doctor.imie} ${doctor.nazwisko}${doctor.specjalizacja ? ` (${doctor.specjalizacja})` : ''}`;
+                lekarzSelect.appendChild(option);
+            });
+
+            // Populate patients dropdown
+            const pacjentSelect = document.getElementById('pacjentSelect');
+            patients.forEach(patient => {
+                const option = document.createElement('option');
+                option.value = patient.id;
+                option.textContent = `${patient.imie} ${patient.nazwisko} (${patient.pesel || 'brak PESEL'})`;
+                pacjentSelect.appendChild(option);
+            });
+
+            // Initialize Select2 for services
+            $('#uslugiSelect').select2({
+                placeholder: "Wybierz usługi",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#newAppointmentModal')
+            });
+
+            // Add services to the select
+            const uslugiSelect = document.getElementById('uslugiSelect');
+            services.forEach(service => {
+                const option = new Option(
+                    `${service.nazwa} (${parseFloat(service.cena).toFixed(2)} zł)`,
+                    service.id,
+                    false,
+                    false
+                );
+                uslugiSelect.add(option);
+            });
+        }).catch(error => {
+            console.error('Error loading data:', error);
+            alert('Wystąpił błąd podczas ładowania danych. Odśwież stronę i spróbuj ponownie.');
+        });
+        
+
+        
+        // Close modal function
+        function closeModal() {
+            newAppointmentModal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Re-enable scrolling
+        }
+        
+        // Open modal function
+        function openModal() {
+            // Reset form
+            newAppointmentForm.reset();
+            // Show modal
+            newAppointmentModal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+            // Reinitialize Select2 if needed
+            if ($.fn.select2) {
+                $('#uslugiSelect').trigger('change');
+            }
+        }
+        
+        // Event listeners for closing modal
+        closeModalBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        
+        // Close when clicking outside the modal
+        window.addEventListener('click', function(event) {
+            if (event.target === newAppointmentModal) {
+                closeModal();
+            }
+        });
+        
+        // Open modal button
+        newAppointmentBtn.addEventListener('click', openModal);
+        
+        // Form submission
+        newAppointmentForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const submitBtn = newAppointmentForm.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Zapisywanie...';
+            
+            try {
+                // Collect form data
+                const formData = {
+                    pacjent_id: document.getElementById('pacjentSelect').value,
+                    lekarz_id: document.getElementById('lekarzSelect').value,
+                    data: document.getElementById('appointmentDate').value,
+                    godzina: document.getElementById('appointmentTime').value,
+                    uslugi: Array.from(document.getElementById('uslugiSelect').selectedOptions).map(opt => opt.value)
+                };
+                
+                // Send to server
+                const response = await fetch('/api/wizyty', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Wystąpił błąd podczas zapisywania wizyty.');
+                }
+                
+                // Show success message
+                alert('Wizyta została zaplanowana pomyślnie!');
+                
+                // Close modal
+                closeModal();
+                
+                // Refresh the calendar
+                calendar.refetchEvents();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message || 'Wystąpił błąd podczas zapisywania wizyty.');
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        });
+    });
+</script>
+{% endblock %}

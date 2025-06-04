@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>Zaloguj się</h2>
+            <p>Zaloguj się, aby uzyskać dostęp do swojego konta</p>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Zamknij">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+            <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+            
+            <div class="form-group">
+                <label for="email">Adres email</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                    </div>
+                    <input type="email" class="form-control" id="email" name="email" 
+                           placeholder="Wprowadź adres email" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Hasło</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    </div>
+                    <input type="password" class="form-control" id="password" name="password" 
+                           placeholder="Wprowadź hasło" required>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary toggle-password" type="button">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group d-flex justify-content-between align-items-center">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                    <label class="form-check-label" for="remember">Zapamiętaj mnie</label>
+                </div>
+                <a href="{{ url_for('auth.request_password_reset') }}" class="forgot-password">Zapomniałeś hasła?</a>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block">Zaloguj się</button>
+            </div>
+            
+            <div class="auth-divider">
+                <span>lub</span>
+            </div>
+            
+            <div class="social-login">
+                <button type="button" class="btn btn-outline-primary btn-block mb-2">
+                    <i class="fab fa-google"></i> Zaloguj się przez Google
+                </button>
+                <button type="button" class="btn btn-outline-dark btn-block">
+                    <i class="fab fa-facebook"></i> Zaloguj się przez Facebooka
+                </button>
+            </div>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Nie masz jeszcze konta? <a href="{{ url_for('register') }}">Zarejestruj się</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const passwordInput = this.closest('.input-group').querySelector('input');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    });
+    
+    // Auto-hide alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 5000);
+        });
+    });
+</script>
+{% endblock %}

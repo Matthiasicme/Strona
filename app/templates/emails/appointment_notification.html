@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ notification_type }} wizyty - {{ appointment.termin.data }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 20px 0;
+            background-color: #4a6fa5;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{% if notification_type == 'POTWIERDZENIE' %}Potwierdzenie wizyty{% elif notification_type == 'PRZYPOMNIENIE' %}Przypomnienie o wizycie{% else %}Anulowanie wizyty{% endif %}</h1>
+    </div>
+    
+    <div class="content">
+        <p>Dzień dobry {{ patient.imie }} {{ patient.nazwisko }},</p>
+        
+        {% if notification_type == 'POTWIERDZENIE' %}
+            <p>Twoja wizyta u {{ doctor.tytul }} {{ doctor.imie }} {{ doctor.nazwisko }} została zaplanowana na:</p>
+            <p><strong>Data i godzina:</strong> {{ appointment.termin.data }} o {{ appointment.termin.godzina_od }}</p>
+            <p><strong>Lokalizacja:</strong> {{ doctor.adres_gabinety[0].adres if doctor.adres_gabinety and doctor.adres_gabinety|length > 0 else 'Do potwierdzenia' }}</p>
+            
+            <p>Prosimy o przybycie 10 minut przed wyznaczoną godziną.</p>
+            
+            <center>
+                <a href="{{ url_for('appointments.view_appointment', appointment_id=appointment.id, _external=True) }}" class="button">Zobacz szczegóły wizyty</a>
+            </center>
+            
+        {% elif notification_type == 'PRZYPOMNIENIE' %}
+            <p>Przypominamy o zaplanowanej wizycie u {{ doctor.tytul }} {{ doctor.imie }} {{ doctor.nazwisko }}:</p>
+            <p><strong>Data i godzina:</strong> {{ appointment.termin.data }} o {{ appointment.termin.godzina_od }}</p>
+            <p><strong>Lokalizacja:</strong> {{ doctor.adres_gabinety[0].adres if doctor.adres_gabinety and doctor.adres_gabinety|length > 0 else 'Do potwierdzenia' }}</p>
+            
+            <p>W razie potrzeby przełożenia lub odwołania wizyty, prosimy o kontakt telefoniczny.</p>
+            
+        {% else %}
+            <p>Niniejszym informujemy, że Twoja wizyta u {{ doctor.tytul }} {{ doctor.imie }} {{ doctor.nazwisko }} została odwołana.</p>
+            <p><strong>Data i godzina:</strong> {{ appointment.termin.data }} o {{ appointment.termin.godzina_od }}</p>
+            
+            <p>Jeśli to nie Ty odwołałeś/aś wizytę, prosimy o kontakt telefoniczny.</p>
+        {% endif %}
+        
+        <hr>
+        
+        <p>Wiadomość wygenerowana automatycznie. Prosimy na nią nie odpowiadać.</p>
+    </div>
+    
+    <div class="footer">
+        <p>© {{ current_date.split('-')[0] }} Telemedycyna. Wszelkie prawa zastrzeżone.</p>
+    </div>
+</body>
+</html>

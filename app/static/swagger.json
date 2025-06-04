@@ -1,0 +1,666 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "System Rejestracji Pacjenta Stomatologicznego API",
+      "description": "API dla systemu rejestracji pacjenta stomatologicznego",
+      "version": "1.0.0"
+    },
+    "servers": [
+      {
+        "url": "/api",
+        "description": "Development server"
+      }
+    ],
+    "components": {
+      "securitySchemes": {
+        "jwt": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "JWT"
+        }
+      }
+    },
+    "paths": {
+      "/auth/register/pacjent": {
+        "post": {
+          "tags": ["Autoryzacja"],
+          "summary": "Rejestracja pacjenta",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "imie": {"type": "string"},
+                    "nazwisko": {"type": "string"},
+                    "email": {"type": "string"},
+                    "haslo": {"type": "string"},
+                    "telefon": {"type": "string"}
+                  },
+                  "required": ["imie", "nazwisko", "email", "haslo", "telefon"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Konto pacjenta utworzone pomyślnie"
+            },
+            "400": {
+              "description": "Błędne dane lub adres email jest już używany"
+            }
+          }
+        }
+      },
+      "/auth/login": {
+        "post": {
+          "tags": ["Autoryzacja"],
+          "summary": "Logowanie użytkownika",
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "email": {"type": "string"},
+                    "haslo": {"type": "string"},
+                    "rola": {"type": "string", "enum": ["pacjent", "lekarz", "admin"]}
+                  },
+                  "required": ["email", "haslo", "rola"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Zalogowano pomyślnie"
+            },
+            "401": {
+              "description": "Nieprawidłowy email lub hasło"
+            }
+          }
+        }
+      },
+      "/wizyty/terminy": {
+        "get": {
+          "tags": ["Wizyty"],
+          "summary": "Pobieranie dostępnych terminów",
+          "parameters": [
+            {
+              "name": "lekarz_id",
+              "in": "query",
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "name": "data_od",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "name": "data_do",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Lista dostępnych terminów"
+            }
+          }
+        }
+      },
+      "/wizyty/umow": {
+        "post": {
+          "tags": ["Wizyty"],
+          "summary": "Umawianie wizyty",
+          "security": [
+            { "jwt": [] }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "termin_id": {"type": "integer"},
+                    "uslugi": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "usluga_id": {"type": "integer"},
+                          "ilosc": {"type": "integer"}
+                        }
+                      }
+                    }
+                  },
+                  "required": ["termin_id"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "Wizyta została umówiona pomyślnie"
+            },
+            "400": {
+              "description": "Błędne dane lub termin jest już zajęty"
+            }
+          }
+        }
+      },
+      "/wizyty/{wizyta_id}": {
+        "get": {
+          "tags": ["Wizyty"],
+          "summary": "Pobieranie szczegółów wizyty",
+          "security": [
+            { "jwt": [] }
+          ],
+          "parameters": [
+            {
+              "name": "wizyta_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Szczegóły wizyty"
+            },
+            "404": {
+              "description": "Wizyta nie istnieje"
+            }
+          }
+        }
+      },
+      "/wizyty/{wizyta_id}/anuluj": {
+        "post": {
+          "tags": ["Wizyty"],
+          "summary": "Anulowanie wizyty",
+          "security": [
+            { "jwt": [] }
+          ],
+          "parameters": [
+            {
+              "name": "wizyta_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": false,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "powod": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Wizyta została anulowana pomyślnie"
+            },
+            "404": {
+              "description": "Wizyta nie istnieje"
+            }
+          }
+        }
+      },
+      "/wizyty/moje": {
+        "get": {
+          "tags": ["Wizyty"],
+          "summary": "Pobieranie wizyt użytkownika",
+          "security": [
+            { "jwt": [] }
+          ],
+          "parameters": [
+            {
+              "name": "status",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "data_od",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "name": "data_do",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Lista wizyt użytkownika"
+            }
+          }
+        }
+      },
+      "/platnosci/{platnosc_id}": {
+        "get": {
+          "tags": ["Płatności"],
+          "summary": "Pobieranie szczegółów płatności",
+          "security": [
+            { "jwt": [] }
+          ],
+          "parameters": [
+            {
+              "name": "platnosc_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Szczegóły płatności"
+            },
+            "404": {
+              "description": "Płatność nie istnieje"
+            }
+          }
+        }
+      },
+      "/platnosci/{platnosc_id}/realizuj": {
+        "post": {
+          "tags": ["Płatności"],
+          "summary": "Realizacja płatności",
+          "security": [
+            { "jwt": [] }
+          ],
+          "parameters": [
+            {
+              "name": "platnosc_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Płatność została zrealizowana lub przygotowano link do płatności"
+            },
+            "404": {
+              "description": "Płatność nie istnieje"
+            }
+          }
+        }
+      },
+      "/platnosci/historia": {
+        "get": {
+          "tags": ["Płatności"],
+          "summary": "Pobieranie historii płatności użytkownika",
+          "security": [
+            { "jwt": [] }
+          ],
+          "parameters": [
+            {
+              "name": "status",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "data_od",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "name": "data_do",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Historia płatności użytkownika"
+            }
+          }
+        }
+      },
+      "/dokumentacja/diagram/{pacjent_id}": {
+        "get": {
+          "tags": ["Dokumentacja"],
+          "summary": "Pobieranie diagramu dentystycznego pacjenta",
+          "security": [
+            { "jwt": [] }
+          ],
+          "parameters": [
+            {
+              "name": "pacjent_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Diagram dentystyczny pacjenta"
+            },
+            "404": {
+              "description": "Pacjent nie istnieje"
+            }
+          }
+        }
+      },
+      "/dokumentacja/recepta/{wizyta_id}": {
+        "post": {
+          "tags": ["Dokumentacja"],
+          "summary": "Wystawienie e-Recepty",
+          "security": [
+            { "jwt": [] }
+          ],
+          "parameters": [
+            {
+              "name": "wizyta_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "opis": {"type": "string"},
+                    "leki": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "nazwa": {"type": "string"},
+                          "dawkowanie": {"type": "string"},
+                          "ilosc": {"type": "integer"},
+                          "refundacja": {"type": "boolean"}
+                        }
+                      }
+                    }
+                  },
+                  "required": ["opis", "leki"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "201": {
+              "description": "E-Recepta została wystawiona pomyślnie"
+            },
+            "404": {
+              "description": "Wizyta nie istnieje"
+            }
+          }
+        }
+      },
+      "/lekarze": {
+        "get": {
+          "tags": ["Lekarze"],
+          "summary": "Pobieranie listy lekarzy",
+          "parameters": [
+            {
+              "name": "specjalizacja",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "aktywni",
+              "in": "query",
+              "schema": {
+                "type": "boolean"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Lista lekarzy"
+            }
+          }
+        }
+      },
+      "/lekarze/kalendarz": {
+        "get": {
+          "tags": ["Lekarze"],
+          "summary": "Pobieranie kalendarza lekarza",
+          "security": [
+            { "jwt": [] }
+          ],
+          "parameters": [
+            {
+              "name": "data_od",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "name": "data_do",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "name": "status",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Kalendarz lekarza"
+            }
+          }
+        }
+      },
+      "/admin/users": {
+        "get": {
+          "tags": ["Administracja"],
+          "summary": "Pobieranie listy użytkowników",
+          "security": [
+            { "jwt": [] }
+          ],
+          "parameters": [
+            {
+              "name": "type",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["pacjent", "lekarz", "admin", "all"]
+              }
+            },
+            {
+              "name": "search",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "status",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["active", "inactive", "all"]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Lista użytkowników"
+            }
+          }
+        }
+      },
+      "/admin/raporty/wizyty": {
+        "get": {
+          "tags": ["Raporty"],
+          "summary": "Generowanie raportu wizyt",
+          "security": [
+            { "jwt": [] }
+          ],
+          "parameters": [
+            {
+              "name": "data_od",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "name": "data_do",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            {
+              "name": "status",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "name": "lekarz_id",
+              "in": "query",
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "name": "format",
+              "in": "query",
+              "schema": {
+                "type": "string",
+                "enum": ["json", "csv"]
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Raport wizyt"
+            }
+          }
+        }
+      },
+      "/integracja/znanylekarz/sync": {
+        "post": {
+          "tags": ["Integracje"],
+          "summary": "Synchronizacja terminów z ZnanyLekarz",
+          "security": [
+            { "jwt": [] }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "lekarz_id": {"type": "integer"},
+                    "data_od": {"type": "string", "format": "date"},
+                    "data_do": {"type": "string", "format": "date"}
+                  },
+                  "required": ["lekarz_id"]
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Synchronizacja z ZnanyLekarz zakończona pomyślnie"
+            },
+            "400": {
+              "description": "Błędne dane"
+            }
+          }
+        }
+      },
+      "/integracja/nfz/ewus": {
+        "post": {
+          "tags": ["Integracje"],
+          "summary": "Weryfikacja ubezpieczenia pacjenta w systemie eWUŚ",
+          "security": [
+            { "jwt": [] }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pacjent_id": {"type": "integer"},
+                    "pesel": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Weryfikacja eWUŚ zakończona pomyślnie"
+            },
+            "400": {
+              "description": "Błędne dane"
+            }
+          }
+        }
+      }
+    }
+  }

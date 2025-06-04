@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}ePrzychodnia - Strona Główna{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero {
+        background: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: white;
+    }
+    
+    .hero p {
+        font-size: 1.25rem;
+        max-width: 700px;
+        margin: 0 auto 2rem;
+        opacity: 0.9;
+    }
+    
+    .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin: 3rem 0;
+    }
+    
+    .feature-card {
+        background: white;
+        padding: 2rem;
+        border-radius: var(--border-radius);
+        text-align: center;
+        transition: var(--transition);
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+        font-size: 2.5rem;
+        color: var(--primary);
+        margin-bottom: 1rem;
+    }
+    
+    .appointment-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-top: 2rem;
+        box-shadow: var(--box-shadow);
+    }
+    
+    #calendar {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--box-shadow);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if not current_user.is_authenticated %}
+<!-- Hero Section for Non-Logged In Users -->
+<section class="hero text-center">
+    <div class="container">
+        <h1>Zadbaj o swoje zdrowie już dziś</h1>
+        <p>Umów wizytę u najlepszych specjalistów bez wychodzenia z domu. Szybko, wygodnie i bezpiecznie.</p>
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Zaloguj się</a>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="container">
+    <h2 class="text-center mb-4">Dlaczego my?</h2>
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <h3>Łatwa rejestracja</h3>
+            <p>Umów wizytę w kilku prostych krokach, bez kolejek i czekania.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-user-md"></i>
+            </div>
+            <h3>Doświadczeni lekarze</h3>
+            <p>Zapewniamy opiekę wykwalifikowanych specjalistów z różnych dziedzin medycyny.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h3>Wszystko w jednym miejscu</h3>
+            <p>Zarządzaj swoimi wizytami i dokumentacją medyczną w jednym miejscu.</p>
+        </div>
+    </div>
+</section>
+{% else %}
+<!-- Calendar Section for Logged In Users -->
+<section class="container">
+    <div class="appointment-card">
+        <div class="d-flex justify-between align-center mb-4">
+            <h2 class="mb-0">Najbliższe terminy wizyt</h2>
+            <a href="{{ url_for('appointments') }}" class="btn btn-outline">Zobacz więcej terminów</a>
+        </div>
+        <div id="calendar"></div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="container mt-5">
+    <h2 class="text-center mb-4">Jak to działa?</h2>
+    <div class="features">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <span class="badge">1</span>
+            </div>
+            <h3>Wybierz specjalistę</h3>
+            <p>Znajdź odpowiedniego lekarza spośród naszych specjalistów.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <span class="badge">2</span>
+            </div>
+            <h3>Wybierz termin</h3>
+            <p>Sprawdź dostępne terminy i wybierz ten, który Ci najbardziej odpowiada.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <span class="badge">3</span>
+            </div>
+            <h3>Potwierdź wizytę</h3>
+            <p>Wypełnij formularz i potwierdź swoją wizytę. Gotowe!</p>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'pl',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            events: '{{ url_for("get_appointments") }}',
+            eventClick: function(info) {
+                info.jsEvent.preventDefault();
+                
+                // Create a nice modal or tooltip with appointment details
+                const event = info.event;
+                const modal = `
+                    <div class="modal">
+                        <h3>${event.title}</h3>
+                        <p><i class="far fa-calendar"></i> ${event.start.toLocaleString('pl-PL')}</p>
+                        <p><i class="fas fa-user-md"></i> ${event.extendedProps.doctor || 'Lekarz'}</p>
+                        <p><i class="fas fa-info-circle"></i> ${event.extendedProps.description || 'Brak dodatkowych informacji'}</p>
+                        <div class="mt-3">
+                            <a href="${event.url || '#'}" class="btn btn-primary">Szczegóły</a>
+                        </div>
+                    </div>
+                `;
+                
+                // You can use a modal library or create your own
+                // For now, we'll use a simple alert
+                alert(`Wizyta: ${event.title}\nData: ${event.start.toLocaleString('pl-PL')}\nLekarz: ${event.extendedProps.doctor || 'Brak danych'}`);
+            },
+            eventContent: function(arg) {
+                // Customize how events are displayed
+                return {
+                    html: `
+                        <div class="fc-event-main">
+                            <div class="fc-event-time">${arg.timeText}</div>
+                            <div class="fc-event-title">${arg.event.title}</div>
+                        </div>
+                    `
+                };
+            },
+            height: 'auto',
+            aspectRatio: 1.5
+        });
+        calendar.render();
+    });
+</script>
+{% endblock %}
